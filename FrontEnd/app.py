@@ -1,8 +1,8 @@
 import streamlit as st
 from src.logic import RecipeManager
 
-st.set_page_config(page_title="Recipe Finder", page_icon="🍳", layout="wide")
-st.title("🍽️ Recipe Finder")
+st.set_page_config(page_title="Recipe Finder & Manager", page_icon="🍽️", layout="wide")
+st.title("🍽️ Recipe Finder & Manager")
 
 # ----------------- Initialize Manager -----------------
 manager = RecipeManager()
