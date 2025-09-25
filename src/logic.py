@@ -1,71 +1,86 @@
-import bcrypt
-from src.db import insert, fetch, update, delete
+# src/logic.py
 
-# ---------- User Authentication ----------
-def hash_password(password: str) -> str:
-    """Hash a password using bcrypt"""
-    return bcrypt.hashpw(password.encode(), bcrypt.gensalt()).decode()
+from src.db import (
+    create_recipe,
+    get_recipes,
+    get_all_recipes,
+    update_recipe,
+    delete_recipe,
+    save_recipe,
+    get_saved_recipes,
+    remove_saved_recipe
+)
 
-def check_password(password: str, hashed: str) -> bool:
-    """Verify a password against its hash"""
-    return bcrypt.checkpw(password.encode(), hashed.encode())
+class RecipeManager:
+    """
+    Acts as a bridge between frontend (Streamlit/FastAPI) and the recipes database.
+    Provides CRUD operations and search functionality.
+    """
 
-def signup_user(first_name: str, last_name: str, email: str, mobile: str, password: str):
-    """Register a new user"""
-    if fetch("users", {"email": email}):
-        raise ValueError("Email already registered")
-    data = {
-        "first_name": first_name,
-        "last_name": last_name,
-        "email": email,
-        "mobile": mobile,
-        "password_hash": hash_password(password)
-    }
-    return insert("users", data)
+    def __init__(self, db=None):
+        """
+        db is optional; if you want, you can pass a custom db object.
+        Currently uses imported db functions directly.
+        """
+        self.db = db
 
-def login_user(email: str, password: str):
-    """Login user with email and password"""
-    users = fetch("users", {"email": email})
-    if not users:
-        return None
-    user = users[0]
-    if check_password(password, user["password_hash"]):
-        return {
-            "user_id": user["user_id"],
-            "first_name": user["first_name"],
-            "last_name": user["last_name"],
-            "email": user["email"]
-        }
-    return None
+    # ------------------- Recipes CRUD -------------------
+    def add_recipe(self, data: dict):
+        """Add a new recipe"""
+        if not data.get("title") or not data.get("description"):
+            return {"success": False, "Message": "Title and Description are required"}
+        result = create_recipe(data)
+        if result:
+            return {"success": True, "Message": "Recipe added successfully", "data": result}
+        return {"success": False, "Message": "Failed to add recipe"}
 
-# ---------- Recipes CRUD ----------
-def create_recipe(user_id: int, title: str, description: str, instructions: str = "", image_url: str = "", prep_time: str = "", ingredients: str = "", allergens: str = ""):
-    """Create a new recipe for a user"""
-    data = {
-        "user_id": user_id,
-        "title": title,
-        "description": description,
-        "instructions": instructions,
-        "image_url": image_url,
-        "prep_time": prep_time,
-        "ingredients": ingredients,
-        "allergens": allergens,
-        "source": "Custom"
-    }
-    return insert("recipes", data)
+    def fetch_recipes(self, user_id: int = None, title_search: str = None):
+        """Fetch recipes by user_id and/or title search"""
+        result = get_recipes(user_id=user_id, title_search=title_search)
+        return {"success": True, "Message": "Recipes fetched successfully", "data": result}
 
-def get_recipes(user_id: int):
-    return fetch("recipes", {"user_id": user_id})
+    def fetch_all_recipes(self):
+        """Fetch all recipes"""
+        result = get_all_recipes()
+        return {"success": True, "Message": "All recipes fetched successfully", "data": result}
 
-def update_recipe(recipe_id: int, updates: dict):
-    return update("recipes", {"recipe_id": recipe_id}, updates)
+    def modify_recipe(self, recipe_id: int, data: dict):
+        """Update a recipe by recipe_id"""
+        if not data:
+            return {"success": False, "Message": "No update data provided"}
+        result = update_recipe(recipe_id, data)
+        if result:
+            return {"success": True, "Message": "Recipe updated successfully", "data": result}
+        return {"success": False, "Message": "Recipe not found or update failed"}
 
-def delete_recipe(recipe_id: int):
-    return delete("recipes", {"recipe_id": recipe_id})
+    def remove_recipe(self, recipe_id: int):
+        """Delete a recipe by recipe_id"""
+        result = delete_recipe(recipe_id)
+        if result:
+            return {"success": True, "Message": "Recipe deleted successfully"}
+        return {"success": False, "Message": "Recipe not found or delete failed"}
 
-# ---------- Saved Recipes ----------
-def save_recipe(user_id: int, recipe_id: int):
-    return insert("saved_recipes", {"user_id": user_id, "recipe_id": recipe_id})
+    # ------------------- Saved Recipes -------------------
+    def save_user_recipe(self, user_id: int, recipe_id: int):
+        """Save a recipe for a user"""
+        result = save_recipe(user_id, recipe_id)
+        if result:
+            return {"success": True, "Message": "Recipe saved successfully", "data": result}
+        return {"success": False, "Message": "Failed to save recipe"}
 
-def get_saved_recipes(user_id: int):
-    return fetch("saved_recipes", {"user_id": user_id})
+    def fetch_saved_recipes(self, user_id: int):
+        """Get all recipes saved by a user"""
+        result = get_saved_recipes(user_id)
+        return {"success": True, "Message": "Saved recipes fetched successfully", "data": result}
+
+    # ------------------- Dedicated search -------------------
+    def search_recipes_by_title(self, title: str, user_id: int = None):
+        """Search recipes by title, optionally filtered by user_id"""
+        if not title:
+            return {"success": False, "Message": "Search title required"}
+        result = get_recipes(user_id=user_id, title_search=title)
+        return {"success": True, "Message": f"Recipes matching '{title}' fetched successfully", "data": result}
+    
+    def unsave_user_recipe(self, user_id: int, recipe_id: int):
+        """Remove a saved recipe for the user"""
+        return remove_saved_recipe(user_id, recipe_id)  # implement this in db.py
