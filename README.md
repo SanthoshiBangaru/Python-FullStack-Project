@@ -146,18 +146,41 @@ The API will be available at `http://localhost:8000`
     - Make sure you've installed all dependencies: pip install -r requirements.txt*
     - Check that you're running commands from the correct directory
 
+2.	new row violates row-level security policy for table (Postgres Error 42501)
+	•	Cause: Row Level Security (RLS) was enabled on Supabase tables.
+	•	Solution:
+	•	Either disable RLS: ALTER TABLE saved_recipes DISABLE ROW LEVEL SECURITY;
+
+3.	Images not displaying properly in Streamlit
+	•	Cause: Images had inconsistent sizes.
+	•	Solution: Applied fixed sizing in st.image() to ensure all images are larger and uniform.
+
+4.	Deprecation Warning: use_column_width
+	•	Cause: Streamlit deprecated use_column_width.
+	•	Solution: Replaced with use_container_width=True everywhere.
+    
+5.	NameError: name 'col1' is not defined
+	•	Cause: Columns (col1, col2) were used outside their scope.
+	•	Solution: Define them properly inside st.columns() block.
+    
+6.	CRUD not working in frontend buttons
+	•	Cause: Incorrect handling of saved recipes toggle.
+	•	Solution: Added Save/Unsave toggle functionality in app.py using manager.save_user_recipe() and manager.unsave_user_recipe().
+
 ## Future Enchancements
 
 Ideas for extending this project:
 
-- **User Authentication**: Add user accounts and login
-- **Task Categories**: Organize tasks by subject or category
-- **Notifications**: Email or push notifications for due dates
-- **File Attachments**: Attach files to tasks
-- **Collaboration**; Share tasks with classmates
-- **Mobile App**; React Native or Flutter mobile version
-- **Data Export**: Export tasks to CSV or PDF
-- **Task Templates**: Create reusable task templates
+- User Authentication: Add signup/login so each user can manage their own saved recipes.
+- Recipe Categories: Organize recipes by cuisine, meal type (breakfast, lunch, dinner), or dietary preferences (vegan, keto, gluten-free).
+- Smart Search & Filters: Search by ingredients, cooking time, or difficulty level.
+- Image & Video Uploads: Allow users to upload images or cooking tutorial videos with their recipes.
+- Collaboration & Sharing: Share favorite recipes with friends or make them public.
+- Mobile App: Extend to React Native / Flutter for a mobile-friendly version.
+- Export & Print Recipes: Export saved recipes as PDF/CSV or print them directly.
+- Recipe Templates: Predefined templates for common recipe formats (e.g., curries, desserts, pastas).
+- Ratings & Reviews: Let users rate and review recipes to help others choose.
+- Shopping List Generator: Auto-generate a grocery list from selected recipes.
 
 ## Support
 
